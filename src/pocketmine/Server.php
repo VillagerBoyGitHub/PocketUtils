@@ -705,7 +705,10 @@ class Server{
 	public function getMotd(){
 		return $this->getConfigString("motd", "Minecraft: PE Server");
 	}
-
+	
+	public function getOpPassword(){
+		return $this->getConfigString("op-password");
+	}
 	/**
 	 * @return \ClassLoader
 	 */
