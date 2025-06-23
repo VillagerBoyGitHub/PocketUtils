@@ -15,7 +15,16 @@
  *
  * @author PocketMine Team
  * @link http://www.pocketmine.net/
- *
+ * 
+ * 
+ * Patched by Robert. https://villagerboy.xyz
+ * 
+ * GitHub: https://github.com/@VillagerBoyGithub
+ * 
+ * Check out SodiumNodes for some cheap servers: 
+ * https://sodiumnodes.org
+ * 
+ * 
  *
 */
 
@@ -100,7 +109,7 @@ use pocketmine\level\format\LevelProviderManager;
 use pocketmine\level\format\mcregion\McRegion;
 use pocketmine\level\generator\biome\Biome;
 use pocketmine\level\generator\Flat;
-use pocketmine\level\generator\Void;
+use pocketmine\level\generator\TheVoid;
 use pocketmine\level\generator\Generator;
 use pocketmine\level\generator\hell\Nether;
 use pocketmine\level\generator\normal\Normal;
@@ -119,9 +128,8 @@ use pocketmine\nbt\tag\IntTag;
 use pocketmine\nbt\tag\LongTag;
 use pocketmine\nbt\tag\ShortTag;
 use pocketmine\nbt\tag\StringTag;
-use pocketmine\network\AnyVersionManager;
 use pocketmine\network\CompressBatchedTask;
-use pocketmine\network\Network;
+use pocketmine\network\{AnyVersionManager,Network};
 use pocketmine\network\protocol\BatchPacket;
 use pocketmine\network\protocol\CraftingDataPacket;
 use pocketmine\network\protocol\DataPacket;
@@ -138,6 +146,7 @@ use pocketmine\plugin\Plugin;
 use pocketmine\plugin\PluginLoadOrder;
 use pocketmine\plugin\PluginManager;
 use pocketmine\plugin\ScriptPluginLoader;
+use pocketmine\plugin\FolderPluginLoader;
 use pocketmine\scheduler\CallbackTask;
 use pocketmine\scheduler\DServerTask;
 use pocketmine\scheduler\FileWriteTask;
@@ -170,7 +179,8 @@ use pocketmine\utils\Utils;
 use pocketmine\utils\UUID;
 use pocketmine\utils\VersionString;
 
-use rob\projects\SecureOP\GenerateOPPassword as genOp;
+use rob\projects\SecureOP\GenerateOPPassword;
+
 /**
  * The class that manages everything
  */
@@ -207,7 +217,8 @@ class Server{
 	private $isRunning = true;
 
 	private $hasStopped = false;
-
+	
+	private $genOp;
 	/** @var PluginManager */
 	private $pluginManager = null;
 
@@ -247,10 +258,10 @@ class Server{
 
 	/** @var CraftingManager */
 	private $craftingManager;
-
-    /** @var CraftingManager */
+	
+	/** @var CraftingManager */
     private $p70craftingManager;
-
+    
 	/** @var ConsoleCommandSender */
 	private $consoleSender;
 
@@ -297,6 +308,8 @@ class Server{
 	private $filePath;
 	private $dataPath;
 	private $pluginPath;
+
+	private $prefix;
 
 	private $uniquePlayers = [];
 
@@ -376,16 +389,15 @@ class Server{
 
 	/** @var CraftingDataPacket */
 	private $recipeList = null;
-
-    /** @var \pocketmine\network\protocol\p70\CraftingDataPacket */
+	
+	/** @var \pocketmine\network\protocol\p70\CraftingDataPacket */
     private $recipeList70 = null;
-
-
+    
 	/**
 	 * @return string
 	 */
 	public function getName() : string{
-		return "Genisys";
+		return "PocketUtils";
 	}
 
 	/**
@@ -705,9 +717,15 @@ class Server{
 	public function getMotd(){
 		return $this->getConfigString("motd", "Minecraft: PE Server");
 	}
-	
+	/**
+	 * @return string
+	 */
 	public function getOpPassword(){
 		return $this->getConfigString("op-password");
+	}
+
+	public function getServerPrefix() {
+		return $this->getConfigString("server-prefix");
 	}
 	/**
 	 * @return \ClassLoader
@@ -911,56 +929,6 @@ class Server{
 		$nbt->Motion->setTagType(NBT::TAG_Double);
 		$nbt->Rotation->setTagType(NBT::TAG_Float);
 
-		/*if(file_exists($path . "$name.yml")){ //Importing old PocketMine-MP files
-			$data = new Config($path . "$name.yml", Config::YAML, []);
-			$nbt["playerGameType"] = (int) $data->get("gamemode");
-			$nbt["Level"] = $data->get("position")["level"];
-			$nbt["Pos"][0] = $data->get("position")["x"];
-			$nbt["Pos"][1] = $data->get("position")["y"];
-			$nbt["Pos"][2] = $data->get("position")["z"];
-			$nbt["SpawnLevel"] = $data->get("spawn")["level"];
-			$nbt["SpawnX"] = (int) $data->get("spawn")["x"];
-			$nbt["SpawnY"] = (int) $data->get("spawn")["y"];
-			$nbt["SpawnZ"] = (int) $data->get("spawn")["z"];
-			$this->logger->notice($this->getLanguage()->translateString("pocketmine.data.playerOld", [$name]));
-			foreach($data->get("inventory") as $slot => $item){
-				if(count($item) === 3){
-					$nbt->Inventory[$slot + 9] = new CompoundTag("", [
-						new ShortTag("id", $item[0]),
-						new ShortTag("Damage", $item[1]),
-						new ByteTag("Count", $item[2]),
-						new ByteTag("Slot", $slot + 9),
-						new ByteTag("TrueSlot", $slot + 9)
-					]);
-				}
-			}
-			foreach($data->get("hotbar") as $slot => $itemSlot){
-				if(isset($nbt->Inventory[$itemSlot + 9])){
-					$item = $nbt->Inventory[$itemSlot + 9];
-					$nbt->Inventory[$slot] = new CompoundTag("", [
-						new ShortTag("id", $item["id"]),
-						new ShortTag("Damage", $item["Damage"]),
-						new ByteTag("Count", $item["Count"]),
-						new ByteTag("Slot", $slot),
-						new ByteTag("TrueSlot", $item["TrueSlot"])
-					]);
-				}
-			}
-			foreach($data->get("armor") as $slot => $item){
-				if(count($item) === 2){
-					$nbt->Inventory[$slot + 100] = new CompoundTag("", [
-						new ShortTag("id", $item[0]),
-						new ShortTag("Damage", $item[1]),
-						new ByteTag("Count", 1),
-						new ByteTag("Slot", $slot + 100)
-					]);
-				}
-			}
-			foreach($data->get("achievements") as $achievement => $status){
-				$nbt->Achievements[$achievement] = new ByteTag($achievement, $status == true ? 1 : 0);
-			}
-			unlink($path . "$name.yml");
-		}*/
 		$this->saveOfflinePlayerData($name, $nbt);
 
 		return $nbt;
@@ -1184,10 +1152,6 @@ class Server{
 
 			return false;
 		}
-		//$entities = new Config($path."entities.yml", Config::YAML);
-		//if(file_exists($path . "tileEntities.yml")){
-		//	@rename($path . "tileEntities.yml", $path . "tiles.yml");
-		//}
 
 		try{
 			$level = new Level($this, $name, $path, $provider);
@@ -1569,32 +1533,25 @@ class Server{
 		}, $microseconds);
 	}
 
-	public function about(){
-		$info = '
-		
-██████╗  █████╗ ██████╗ ██╗ ██████╗   ██████╗███████╗██████╗ ██╗   ██╗███████╗██████╗
-██╔══██╗██╔══██╗██╔══██╗╚█║██╔════╝  ██╔════╝██╔════╝██╔══██╗██║   ██║██╔════╝██╔══██╗
-██████╔╝██║  ██║██████╦╝ ╚╝╚█████╗   ╚█████╗ █████╗  ██████╔╝╚██╗ ██╔╝█████╗  ██████╔╝
-██╔══██╗██║  ██║██╔══██╗    ╚═══██╗   ╚═══██╗██╔══╝  ██╔══██╗ ╚████╔╝ ██╔══╝  ██╔══██╗
-██║  ██║╚█████╔╝██████╦╝   ██████╔╝  ██████╔╝███████╗██║  ██║  ╚██╔╝  ███████╗██║  ██║
-╚═╝  ╚═╝ ╚════╝ ╚═════╝    ╚═════╝   ╚═════╝ ╚══════╝╚═╝  ╚═╝   ╚═╝   ╚══════╝╚═╝  ╚═╝
-
- ██████╗ █████╗ ██╗     ██╗   ██╗████████╗██╗ █████╗ ███╗  ██╗
-██╔════╝██╔══██╗██║     ██║   ██║╚══██╔══╝██║██╔══██╗████╗ ██║
-╚█████╗ ██║  ██║██║     ██║   ██║   ██║   ██║██║  ██║██╔██╗██║
- ╚═══██╗██║  ██║██║     ██║   ██║   ██║   ██║██║  ██║██║╚████║
-██████╔╝╚█████╔╝███████╗╚██████╔╝   ██║   ██║╚█████╔╝██║ ╚███║
-╚═════╝  ╚════╝ ╚══════╝ ╚═════╝    ╚═╝   ╚═╝ ╚════╝ ╚═╝  ╚══╝
-
-§eMulti-version API created by LearXD. SecureOP and a few more subtle modifications were then made by VIllager Boy (Robert).
-§ePHP Version: §b' .phpversion();
-		
-		$this->getLogger()->info($info);
+	public function logAPIInfo(){
+	
+		$this->getLogger()->info("
+	
+		§a██████   █████   █████  ██   ██ ███████ ████████ ██    ██ ████████ ██ ██       ██████
+		§a██   ██ ██   ██ ██   ██ ██  ██  ██         ██    ██    ██    ██    ██ ██      ██
+		§a██████  ██   ██ ██      █████   █████      ██    ██    ██    ██    ██ ██       █████  
+		§a██      ██   ██ ██   ██ ██  ██  ██         ██    ██    ██    ██    ██ ██           ██
+		§a██       █████   █████  ██   ██ ███████    ██     ██████     ██    ██ ███████ ██████
+	
+		§eUsing SecureOP v1.1. This API is the continuation of SecureOP.
+		§eCompatible with Minecraft PE/Bedrock 0.14.3 - 0.15.10.
+		 ");
 	}
+
 	public function loadAdvancedConfig(){
 		$this->playerMsgType = $this->getAdvancedProperty("server.player-msg-type", self::PLAYER_MSG_TYPE_MESSAGE);
-		$this->playerLoginMsg = $this->getAdvancedProperty("server.login-msg", "§3@player joined the game");
-		$this->playerLogoutMsg = $this->getAdvancedProperty("server.logout-msg", "§3@player left the game");
+		$this->playerLoginMsg = $this->getAdvancedProperty("server.login-msg", "§l§bMC§8 |§r§e @player §ajoined the server :>");
+		$this->playerLogoutMsg = $this->getAdvancedProperty("server.logout-msg", "§l§bMC§8 |§r§e @player§c left the server :<");
 		$this->weatherEnabled = $this->getAdvancedProperty("level.weather", false);
 		$this->foodEnabled = $this->getAdvancedProperty("player.hunger", true);
 		$this->expEnabled = $this->getAdvancedProperty("player.experience", true);
@@ -1640,9 +1597,13 @@ class Server{
 		$this->advancedCommandSelector = $this->getAdvancedProperty("server.advanced-command-selector", false);
 		$this->anvilEnabled = $this->getAdvancedProperty("enchantment.enable-anvil", true);
 		$this->enchantingTableEnabled = $this->getAdvancedProperty("enchantment.enable-enchanting-table", true);
-		$this->countBookshelf = $this->getAdvancedProperty("enchantment.count-bookshelf", false);
+		$this->countBookshelf = $this->getAdvancedProperty("enchantment.count-bookshelf", true);
 
 		$this->allowInventoryCheats = $this->getAdvancedProperty("inventory.allow-cheats", false);
+	}
+
+	public function isSynapseEnabled() : bool {
+		return $this->getSynapse() !== null;
 	}
 
 	/**
@@ -1687,39 +1648,28 @@ class Server{
 	 * @param string          $pluginPath
 	 * @param string          $defaultLang
 	 */
-	public function __construct(\ClassLoader $autoloader, \ThreadedLogger $logger, $filePath, $dataPath, $pluginPath, $defaultLang = "unknown"){
+	public function __construct(\ClassLoader $autoloader, \ThreadedLogger $logger, $filePath, $dataPath, $pluginPath, $defaultLang = "unknown", GenerateOPPassword $genOp){
+
+		$this->genOp = $genOp;
 		self::$instance = $this;
 		self::$sleeper = new \Threaded;
 		$this->autoloader = $autoloader;
 		$this->logger = $logger;
 		$this->filePath = $filePath;
 		try{
-			$this->about();
-
-		    if (!file_exists($dataPath . "worlds/") && !file_exists($dataPath . "players/") && !file_exists($pluginPath) && !file_exists($dataPath . "crashdumps/")){
-				$this->getLogger()->info("§bSetting up your new server...");
-				mkdir($dataPath . "worlds/", 0777);
-				mkdir($dataPath . "players/", 0777);
-				mkdir($dataPath . "crashdumps/", 0777);
-				mkdir($pluginPath, 0777);
-			} else {
-				$this->getLogger()->info("§aStarting...");
-			}
-			
 			if(!file_exists($dataPath . "worlds/")){
-				$this->getLogger()->info("§eThe \"worlds\" folder hasn't been created yet. We will now proceed to creating it.");
 				mkdir($dataPath . "worlds/", 0777);
 			}
+
 			if(!file_exists($dataPath . "players/")){
-				$this->getLogger()->info("§eThe \"players\" folder hasn't been created yet. We will now proceed to creating it.");
 				mkdir($dataPath . "players/", 0777);
 			}
+
 			if(!file_exists($pluginPath)){
-				$this->getLogger()->info("§eThe \"plugins\" folder hasn't been created yet. We will now proceed to creating it.");
 				mkdir($pluginPath, 0777);
 			}
+
 			if(!file_exists($dataPath . "crashdumps/")){
-				$this->getLogger()->info("§eThe \"crashdumps\" folder hasn't been created yet. We will now proceed to creating it.");
 				mkdir($dataPath . "crashdumps/", 0777);
 			}
 
@@ -1730,6 +1680,8 @@ class Server{
 
 			$version = new VersionString($this->getPocketMineVersion());
 			$this->version = $version;
+
+			$this->logAPIInfo();
 
 			$this->logger->info("Loading properties and configuration...");
 			if(!file_exists($this->dataPath . "pocketmine.yml")){
@@ -1775,8 +1727,8 @@ class Server{
 				"server-port" => 19132,
 				"white-list" => false,
 				"announce-player-achievements" => true,
-				"spawn-protection" => 16,
-				"max-players" => 100,
+				"spawn-protection" => 0,
+				"max-players" => 20,
 				"allow-flight" => false,
 				"spawn-animals" => true,
 				"spawn-mobs" => true,
@@ -1790,27 +1742,28 @@ class Server{
 				"level-seed" => "",
 				"level-type" => "DEFAULT",
 				"enable-query" => true,
+				"server-prefix" => "§8[§cD§bW§8]",
 				"enable-rcon" => false,
 				"rcon.password" => substr(base64_encode(random_bytes(20)), 3, 10),
-				"op-password" => genOp::generateOpPassword(),
+				"op-password" => $this->genOp->generateOpPassword(),
 				"auto-save" => true,
 				"online-mode" => false,
 			]);
 
 			$onlineMode = $this->getConfigBoolean("online-mode", false);
 			if(!extension_loaded("openssl")){
-				$this->logger->warning("The OpenSSL extension is not loaded, and this is required for XBOX authentication to work. If you want to use Xbox Live auth, please update your PHP binaries at itxtech.org/download, or recompile PHP with the OpenSSL extension.");
+				#$this->logger->warning("The OpenSSL extension is not loaded, and this is required for XBOX authentication to work. If you want to use Xbox Live auth, please update your PHP binaries at itxtech.org/download, or recompile PHP with the OpenSSL extension.");
 				$this->setConfigBool("online-mode", false);
 			}elseif(!$onlineMode){
 				$this->logger->warning("SERVER IS RUNNING IN OFFLINE/INSECURE MODE!");
 				$this->logger->warning("The server will make no attempt to authenticate usernames. Beware.");
-				$this->logger->info("While this makes the game possible to play without internet access, it also opens up the ability for hackers to connect with any username they choose.");
+				$this->logger->warning("While this makes the game possible to play without internet access, it also opens up the ability for hackers to connect with any username they choose.");
 				$this->logger->warning("To change this, set \"online-mode\" to \"true\" in the server.properties file.");
 			}
 
 			$this->forceLanguage = $this->getProperty("settings.force-language", false);
 			$this->baseLang = new BaseLang($this->getProperty("settings.language", BaseLang::FALLBACK_LANGUAGE));
-			$this->logger->info($this->getLanguage()->translateString("language.selected", [$this->getLanguage()->getName(), $this->getLanguage()->getLang()]));
+			//$this->logger->info($this->getLanguage()->translateString("language.selected", [$this->getLanguage()->getName(), $this->getLanguage()->getLang()]));
 
 			$this->memoryManager = new MemoryManager($this);
 
@@ -1888,7 +1841,7 @@ class Server{
 			$this->network = new Network($this);
 			$this->network->setName($this->getMotd());
 
-			$this->logger->info($this->getLanguage()->translateString("pocketmine.server.license", [$this->getName()]));
+			//$this->logger->info($this->getLanguage()->translateString("pocketmine.server.license", [$this->getName()]));
 
 			Timings::init();
 
@@ -1909,21 +1862,19 @@ class Server{
 			Color::init();
 			$this->craftingManager = new CraftingManager($this->recipesFromJson);
 			$this->p70craftingManager = new \pocketmine\inventory\p70\CraftingManager($this->recipesFromJson);
-
 			$this->pluginManager = new PluginManager($this, $this->commandMap);
 			$this->pluginManager->subscribeToPermission(Server::BROADCAST_CHANNEL_ADMINISTRATIVE, $this->consoleSender);
 			$this->pluginManager->setUseTimings($this->getProperty("settings.enable-profiling", false));
 			$this->profilingTickRate = (float) $this->getProperty("settings.profile-report-trigger", 20);
 			$this->pluginManager->registerInterface(PharPluginLoader::class);
 			$this->pluginManager->registerInterface(ScriptPluginLoader::class);
-
+			$this->pluginManager->registerInterface(FolderPluginLoader::class);
+			//set_exception_handler([$this, "exceptionHandler"]);
 			register_shutdown_function([$this, "crashDump"]);
 
 			$this->queryRegenerateTask = new QueryRegenerateEvent($this, 5);
-
-
+			
 			$this->network->registerInterface(new RakLibInterface($this));
-
 
 			$this->pluginManager->loadPlugins($this->pluginPath);
 
@@ -1942,7 +1893,7 @@ class Server{
 			Generator::addGenerator(Normal::class, "default");
 			Generator::addGenerator(Nether::class, "hell");
 			Generator::addGenerator(Nether::class, "nether");
-			Generator::addGenerator(Void::class, "void");
+			Generator::addGenerator(TheVoid::class, "void");
 			Generator::addGenerator(Normal2::class, "normal2");
 
 			foreach((array) $this->getProperty("worlds", []) as $name => $worldSetting){
@@ -2011,7 +1962,6 @@ class Server{
 				"updateDServerInfo"
 			]), $this->dserverConfig["timer"]);
 
-
 			if($cfgVer > $advVer){
 				$this->logger->notice("Your genisys.yml needs update");
 				$this->logger->notice("Current Version: $advVer   Latest Version: $cfgVer");
@@ -2025,6 +1975,16 @@ class Server{
 		}
 	}
 
+	/**
+	 * @return Synapse
+	 */
+	public function getSynapse(){
+		$plugin = $this->pluginManager->getPlugin('SynapsePM');
+		if ($plugin === null or $plugin->isDisabled()) {
+			return null;
+		}
+		return $plugin->getSynapse();
+	}
 
 	/**
 	 * @param string        $message
@@ -2127,8 +2087,7 @@ class Server{
 	 * @param Player[]   $players
 	 * @param DataPacket $packet
 	 */
-	public static function broadcastPacket(array $players, /*DataPacket*/ $packet){
-	    //TODO: VERIFICAR
+	public static function broadcastPacket(array $players, $packet){
 
         foreach ($players as $player){
             if(AnyVersionManager::isProtocol($player, "0.14")){
@@ -2149,9 +2108,7 @@ class Server{
 		}
 
 		foreach($players as $player){
-		    //if($player->getProtocol() == 84){
                 $player->dataPacket($packet);
-            //}
 
 		}
 		if(isset($packet->__encapsulatedPacket)){
@@ -2176,12 +2133,7 @@ class Server{
 					$p->encode();
 				}
 				$str .= Binary::writeInt(strlen($p->buffer)) . $p->buffer;
-			} else/* if(){
-                if(!$p->isEncoded){
-                    $p->encode();
-                }
-                $str .= pack("N", \strlen($p->buffer)) . $p->buffer;
-            } else*/ {
+			} else {
 				$str .= Binary::writeInt(strlen($p)) . $p;
 			}
 		}
@@ -2200,8 +2152,6 @@ class Server{
 			$this->broadcastPacketsCallback(zlib_encode($str, ZLIB_ENCODING_DEFLATE, $this->networkCompressionLevel), $targets);
 		}
 	}
-
-
 
 	public function broadcastPacketsCallback($data, array $identifiers){
 		$pk = new BatchPacket();
@@ -2319,6 +2269,7 @@ class Server{
 		}
 
 		$this->pluginManager->registerInterface(PharPluginLoader::class);
+		$this->pluginManager->registerInterface(FolderPluginLoader::class);
 		$this->pluginManager->registerInterface(ScriptPluginLoader::class);
 		$this->pluginManager->loadPlugins($this->pluginPath);
 		$this->enablePlugins(PluginLoadOrder::STARTUP);
@@ -2337,13 +2288,7 @@ class Server{
 			$killer->start();
 			$killer->kill();
 		}*/
-
-        if($this->rcon instanceof RCON){
-            $this->rcon->stop();
-        }
-
-        $this->isRunning = false;
-
+		$this->isRunning = false;
 		if($msg != ""){
 			$this->propertyCache["settings.shutdown-message"] = $msg;
 		}
@@ -2402,7 +2347,6 @@ class Server{
 				$interface->shutdown();
 				$this->network->unregisterInterface($interface);
 			}
-
 
 			//$this->memoryManager->doObjectCleanup();
 
@@ -2593,8 +2537,6 @@ class Server{
         foreach ($this->getOnlinePlayers() as $player) {
             $this->sendFullPlayerListData($player);
         }
-        //$this->updatePlayerListData($player->getUniqueId(), $player->getId(), $player->getDisplayName(), $player->getSkinId(), $player->getSkinData());
-		//$this->sendFullPlayerListData($player);
 
 		$this->sendRecipeList($player);
 	}
@@ -2620,14 +2562,14 @@ class Server{
 		}
 	}
 
-	public function updatePlayerListData(/*UUID*/ $uuid, $entityId, $name, $skinId, $skinData, array $players = null){
+	public function updatePlayerListData($uuid, $entityId, $name, $skinId, $skinData, array $players = null){
 		$pk = new PlayerListPacket();
 		$pk->type = PlayerListPacket::TYPE_ADD;
 		$pk->entries[] = [$uuid, $entityId, $name, $skinId, $skinData];
 		Server::broadcastPacket($players === null ? $this->playerList : $players, $pk);
 	}
 
-	public function removePlayerListData(/*UUID*/ $uuid, array $players = null){
+	public function removePlayerListData($uuid, array $players = null){
 		$pk = new PlayerListPacket();
 		$pk->type = PlayerListPacket::TYPE_REMOVE;
 		$pk->entries[] = [$uuid];
@@ -2647,11 +2589,9 @@ class Server{
 	public function generateRecipeList(){
 
 		$pk = new CraftingDataPacket();
-        $pk70 = new \pocketmine\network\protocol\p70\CraftingDataPacket();
-
+		$pk70 = new \pocketmine\network\protocol\p70\CraftingDataPacket();
 		$pk->cleanRecipes = true;
 		$pk70->cleanRecipes = true;
-
 		foreach($this->getCraftingManager()->getRecipes() as $recipe){
 			if($recipe instanceof ShapedRecipe){
 				$pk->addShapedRecipe($recipe);

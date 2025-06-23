@@ -166,7 +166,7 @@ class Explosion{
 				}
 
 				if($entity->attack($ev->getFinalDamage(), $ev) === true){
-					//$ev->useArmors();
+					$ev->useArmors();
 				}
 				$entity->setMotion($motion->multiply($impact));
 			}

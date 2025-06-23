@@ -65,8 +65,6 @@ abstract class RakLib{
 	 * payload
 	 */
 
-    const PACKET_PING = 0x0a;
-
 	/*
 	 * ENCAPSULATED payload:
 	 * byte (identifier length)
@@ -147,7 +145,6 @@ abstract class RakLib{
 	 * byte (address length)
 	 * byte[] (address)
 	 */
-
 	const PACKET_UNBLOCK_ADDRESS = 0x0a;
 
 	/*

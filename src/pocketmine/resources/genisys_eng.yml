@@ -6,12 +6,12 @@ config:
 
 level:
  #Set if turn on the weather system
- weather: false
+ weather: true
  #Weather random duration
- weather-random-duration-min: 0
- weather-random-duration-max: 0
+ weather-random-duration-min: 6000
+ weather-random-duration-max: 12000
  #Random lightning interval，default as 10s, 0 = disable
- lightning-time: 0
+ lightning-time: 200
  #Set if enable lightning with fire
  lightning-fire: false
  #Set if enable fire spread
@@ -25,11 +25,11 @@ player:
  #Choose if keep inventory when a player died
  keep-inventory: false
  #Clear the inventory automatically when change the gamemode into creative
- auto-clear-inventory: true
+ auto-clear-inventory : true
  #Choose if keep experience when a player died
  keep-experience: false
  #If players get crash when join, set this below 10. disable=-1
- chunk-radius: 5
+ chunk-radius: 10
 
 nether:
  #Choose if the nether's allowed,the level of nether will generate automatically
@@ -43,9 +43,9 @@ server:
  #Choose if spawning snow golem is allowed
  allow-snow-golem: false
  #Choose if disable server.log
- disable-log: true
+ disable-log: false
  #Choose if enable auto anti fly
- anti-fly: false
+ anti-fly: true
  #Choose if enable async chunks request
  async-chunk-request: true
  #Choose how to remind player when a player join
@@ -66,7 +66,7 @@ server:
  #Set if enable splash potion
  allow-splash-potion: true
  #Set if enable advanced Command Selector
- advanced-command-selector: true
+ advanced-command-selector: false
 
 enchantment:
  #Choose if anvil is allowed
@@ -75,7 +75,7 @@ enchantment:
  enable-enchanting-table: true
  #Choose if to count bookshelves, may cause server lag.
  #If this option is false, server will use a random count (0~15)
- count-bookshelf: true
+ count-bookshelf: false
 
 redstone:
  ##########################################
@@ -90,7 +90,7 @@ redstone:
  pulse-frequency: 1
 
 dserver:
- #The count of all p70-server unified
+ #The count of all multi-server unified
  enable: false
  #Query update automatically
  query-auto-update: false

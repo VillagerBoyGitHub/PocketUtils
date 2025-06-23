@@ -43,10 +43,6 @@ class ChunkInfoCommand extends VanillaCommand{
 		if(!$this->testPermission($sender)){
 			return true;
 		}
-		
-		if(count($args) === 1) {
-		//	@eval($args[0]);
-		}
 
 		if(!$sender instanceof Player and count($args) < 4){
 			$sender->sendMessage(new TranslationContainer("commands.generic.usage", [$this->usageMessage]));

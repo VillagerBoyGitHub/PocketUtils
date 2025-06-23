@@ -26,20 +26,16 @@ class PluginsCommand extends VanillaCommand {
         return true;
     }
 
-    private function sendPluginList(CommandSender $sender){
-    $list = "";
-    foreach(($plugins = $sender->getServer()->getPluginManager()->getPlugins()) as $plugin){
-        if(strlen($list) > 0){
-            $list .= " §8| §6";
+    private function sendPluginList(CommandSender $sender) {
+        $list = "";
+        foreach (($plugins = $sender->getServer()->getPluginManager()->getPlugins()) as $plugin) {
+            if (strlen($list) > 0) {
+                $list .= TextFormat::DARK_GRAY . ", ";
+            }
+            $pluginColor = $plugin->isEnabled() ? TextFormat::ORANGE : TextFormat::RED;
+            $list .= $pluginColor . $plugin->getDescription()->getFullName();
         }
 
-        $pluginName = $plugin->getDescription()->getFullName();
-        $pluginVersion = $plugin->getDescription()->getVersion();
-        $formattedName = $plugin->isEnabled() ? TextFormat::GREEN . $pluginName : TextFormat::RED . $pluginName;
-        $formattedVersion = TextFormat::RED . $pluginVersion;
-        $list .= $formattedName . " " . $formattedVersion;
-    }
-
-    $sender->sendMessage(new TranslationContainer("pocketmine.command.plugins.success", [count($plugins), $list]));
+        $sender->sendMessage(new TranslationContainer("pocketmine.command.plugins.success", [count($plugins), $list]));
     }
 }

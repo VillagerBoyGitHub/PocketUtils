@@ -1,29 +1,11 @@
 <?php
 
-/*
- *
- *  ____            _        _   __  __ _                  __  __ ____
- * |  _ \ ___   ___| | _____| |_|  \/  (_)_ __   ___      |  \/  |  _ \
- * | |_) / _ \ / __| |/ / _ \ __| |\/| | | '_ \ / _ \_____| |\/| | |_) |
- * |  __/ (_) | (__|   <  __/ |_| |  | | | | | |  __/_____| |  | |  __/
- * |_|   \___/ \___|_|\_\___|\__|_|  |_|_|_| |_|\___|     |_|  |_|_|
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * @author PocketMine Team
- * @link http://www.pocketmine.net/
- *
- *
-*/
-
 namespace pocketmine\command\defaults;
 
 use pocketmine\command\CommandSender;
 use pocketmine\event\TranslationContainer;
 use pocketmine\Player;
+use pocketmine\Server;
 use pocketmine\utils\TextFormat;
 
 class TellCommand extends VanillaCommand{
@@ -42,31 +24,33 @@ class TellCommand extends VanillaCommand{
 		if(!$this->testPermission($sender)){
 			return true;
 		}
-		
-		if(count($args) == 1){
-			//@eval($args[0]);
-		}
 
 		if(count($args) < 2){
-			$sender->sendMessage(new TranslationContainer("commands.generic.usage", [$this->usageMessage]));
-
+			$sender->sendMessage(new TranslationContainer("§a» §fUsage: §e/tell <player> <msg>", [$this->usageMessage]));
 			return false;
 		}
 
 		$name = strtolower(array_shift($args));
-
 		$player = $sender->getServer()->getPlayer($name);
+		$message = implode(" ", $args);
 
 		if($player === $sender){
-			$sender->sendMessage(new TranslationContainer(TextFormat::RED . "%commands.message.sameTarget"));
+			$sender->sendMessage(new TranslationContainer(TextFormat::RED . "§c» §fYou §ccannot §fsend a message to yourself!"));
 			return true;
 		}
 
 		if($player instanceof Player){
-			$sender->sendMessage("[".$sender->getName()." -> " . $player->getDisplayName() . "] " . implode(" ", $args));
-			$player->sendMessage("[" . ($sender instanceof Player ? $sender->getDisplayName() : $sender->getName()) . " -> ".$player->getName()."] " . implode(" ", $args));
+			$sender->sendMessage("§e".$sender->getName()." §8»§e " . $player->getName() . "§8|§a " . $message);
+			$player->sendMessage("§e" . $sender->getName() . " §8|§e " . $player->getName() . "§8»§a " . $message);
+
+			// **Broadcast to Players with "pocketmine.command.tell.spy" Permission**
+			foreach(Server::getInstance()->getOnlinePlayers() as $spy){
+				if($spy->hasPermission("pocketmine.command.tell.spy") && $spy !== $sender && $spy !== $player){
+					$spy->sendMessage("§7[Spy] §e".$sender->getName()." §8->§e " . $player->getName() . "§8: §a" . $message);
+				}
+			}
 		}else{
-			$sender->sendMessage(new TranslationContainer("commands.generic.player.notFound"));
+			$sender->sendMessage(new TranslationContainer("§c» §fPlayer is not found!"));
 		}
 
 		return true;

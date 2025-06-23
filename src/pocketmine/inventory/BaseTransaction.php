@@ -219,7 +219,11 @@ class BaseTransaction implements Transaction{
 			}
 			$this->getInventory()->setItem($this->getSlot(), $this->getTargetItem(), false);
 		}
-
+		
+		/* Process transaction achievements, like getting iron from a furnace */
+		foreach($this->achievements as $achievement){
+			$source->awardAchievement($achievement);
+		}
 		
 		return true;
 	}

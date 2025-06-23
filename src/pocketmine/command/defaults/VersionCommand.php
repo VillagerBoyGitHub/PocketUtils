@@ -1,24 +1,5 @@
 <?php
 
-/*
- *
- *  ____            _        _   __  __ _                  __  __ ____
- * |  _ \ ___   ___| | _____| |_|  \/  (_)_ __   ___      |  \/  |  _ \
- * | |_) / _ \ / __| |/ / _ \ __| |\/| | | '_ \ / _ \_____| |\/| | |_) |
- * |  __/ (_) | (__|   <  __/ |_| |  | | | | | |  __/_____| |  | |  __/
- * |_|   \___/ \___|_|\_\___|\__|_|  |_|_|_| |_|\___|     |_|  |_|_|
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * @author PocketMine Team
- * @link http://www.pocketmine.net/
- *
- *
-*/
-
 namespace pocketmine\command\defaults;
 
 use pocketmine\command\CommandSender;
@@ -45,21 +26,21 @@ class VersionCommand extends VanillaCommand{
 		}
 
 		if(\count($args) === 0){
-			$sender->sendMessage(new TranslationContainer("pocketmine.server.info.extended.title"));
-			$sender->sendMessage(new TranslationContainer("pocketmine.server.info.extended1", [
+			$sender->sendMessage(new TranslationContainer("§c Nether§aWix"));
+			$sender->sendMessage(new TranslationContainer("§7- §fAntiDDos: §aWoking...", [
 											$sender->getServer()->getName(), 
 											$sender->getServer()->getFormattedVersion("-"),
 											$sender->getServer()->getCodename()
 			]));
-			$sender->sendMessage(new TranslationContainer("pocketmine.server.info.extended2", [
+			$sender->sendMessage(new TranslationContainer("§7- §fPHP Version: §7(§a7.0.3§7)", [
 											phpversion()
 			]));
-			$sender->sendMessage(new TranslationContainer("pocketmine.server.info.extended3", [
+			$sender->sendMessage(new TranslationContainer("§7- §fSupported Protocols: §7(§a70, 84...§7)", [
 											$sender->getServer()->getApiVersion(),
 											$sender->getServer()->getiTXApiVersion()
 			
 			]));
-			$sender->sendMessage(new TranslationContainer("pocketmine.server.info.extended4", [
+			$sender->sendMessage(new TranslationContainer("§7- §fFixed: §aBugs Fixed + §aAnti Packets + §aAntiForceOp", [
 											$sender->getServer()->getVersion(),
 											Info::CURRENT_PROTOCOL
 			]));
@@ -83,7 +64,7 @@ class VersionCommand extends VanillaCommand{
 			}
 
 			if(!$found){
-				$sender->sendMessage(new TranslationContainer("pocketmine.command.version.noSuchPlugin"));
+				$sender->sendMessage(new TranslationContainer("§c» §fYou have entered an wrong plugin name"));
 			}
 		}
 
@@ -104,9 +85,9 @@ class VersionCommand extends VanillaCommand{
 
 		if(\count($authors = $desc->getAuthors()) > 0){
 			if(\count($authors) === 1){
-				$sender->sendMessage("Author: " . implode(", ", $authors));
+				$sender->sendMessage("Author: " . \implode(", ", $authors));
 			}else{
-				$sender->sendMessage("Authors: " . implode(", ", $authors));
+				$sender->sendMessage("Authors: " . \implode(", ", $authors));
 			}
 		}
 	}

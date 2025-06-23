@@ -50,15 +50,23 @@ class BinaryStream extends \stdClass{
 		return $this->buffer;
 	}
 
-	public function get($len){
-		if($len < 0){
-			$this->offset = strlen($this->buffer) - 1;
-			return "";
-		}elseif($len === true){
-			return substr($this->buffer, $this->offset);
-		}
-		return $len === 1 ? $this->buffer{$this->offset++} : substr($this->buffer, ($this->offset += $len) - $len, $len);
-	}
+	public function get($len) {
+        if ($len < 0) {
+            $this->offset = strlen($this->buffer) - 1;
+            return "";
+        } elseif ($len === true) {
+            return substr($this->buffer, $this->offset);
+        }
+
+        $remaining = strlen($this->buffer) - $this->offset;
+
+        if ($remaining <= 0) {
+            $this->offset = strlen($this->buffer);
+            return "";
+        }
+
+        return $len === 1 ? $this->buffer{$this->offset++} : substr($this->buffer, ($this->offset += $len) - $len, $len);
+    }
 
 	public function put($str){
 		$this->buffer .= $str;

@@ -72,7 +72,7 @@ class Fire extends Flowable{
 		if(!$entity->hasEffect(Effect::FIRE_RESISTANCE)){
 			$ev = new EntityDamageByBlockEvent($this, $entity, EntityDamageEvent::CAUSE_FIRE, 1);
 			if($entity->attack($ev->getFinalDamage(), $ev) === true){
-				//$ev->useArmors();
+				$ev->useArmors();
 			}
 			$ProtectL = $ev->getFireProtectL();
 		}

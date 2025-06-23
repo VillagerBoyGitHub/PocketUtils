@@ -198,7 +198,7 @@ class MainLogger extends \AttachableThreadedLogger{
 		$this->shutdown = true;
 	}
 
-	protected function send($message, $level, $prefix, $color){
+protected function send($message, $level, $prefix, $color){
 		$now = time();
 
 		$thread = \Thread::getCurrentThread();
@@ -242,7 +242,7 @@ class MainLogger extends \AttachableThreadedLogger{
 				$this->notify();
 			});
 		}
-	}
+	}	
 
 	/*public function run(){
 		$this->shutdown = false;

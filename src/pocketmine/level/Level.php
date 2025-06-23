@@ -249,27 +249,27 @@ class Level implements ChunkManager, Metadatable{
 	private $randomTickBlocks = [
 		Block::GRASS => Grass::class,
 		Block::SAPLING => Sapling::class,
-		//Block::LEAVES => Leaves::class,
-		//Block::WHEAT_BLOCK => Wheat::class,
-		//Block::COCOA_BLOCK => CocoaBlock::class,
-		//Block::FARMLAND => Farmland::class,
-		//Block::SNOW_LAYER => SnowLayer::class,
-		//Block::ICE => Ice::class,
-		//Block::CACTUS => Cactus::class,
-		//Block::SUGARCANE_BLOCK => Sugarcane::class,
-		//Block::RED_MUSHROOM => RedMushroom::class,
-		//Block::BROWN_MUSHROOM => BrownMushroom::class,
-		//Block::PUMPKIN_STEM => PumpkinStem::class,
-		//Block::NETHER_WART_BLOCK => NetherWart::class,
-		//Block::MELON_STEM => MelonStem::class,
+		Block::LEAVES => Leaves::class,
+		Block::WHEAT_BLOCK => Wheat::class,
+		Block::COCOA_BLOCK => CocoaBlock::class,
+		Block::FARMLAND => Farmland::class,
+		Block::SNOW_LAYER => SnowLayer::class,
+		Block::ICE => Ice::class,
+		Block::CACTUS => Cactus::class,
+		Block::SUGARCANE_BLOCK => Sugarcane::class,
+		Block::RED_MUSHROOM => RedMushroom::class,
+		Block::BROWN_MUSHROOM => BrownMushroom::class,
+		Block::PUMPKIN_STEM => PumpkinStem::class,
+		Block::NETHER_WART_BLOCK => NetherWart::class,
+		Block::MELON_STEM => MelonStem::class,
 		//Block::VINE => true,
-		//Block::MYCELIUM => Mycelium::class,
+		Block::MYCELIUM => Mycelium::class,
 		//Block::COCOA_BLOCK => true,
-		//Block::CARROT_BLOCK => Carrot::class,
-		//Block::POTATO_BLOCK => Potato::class,
-		//Block::LEAVES2 => Leaves2::class,
+		Block::CARROT_BLOCK => Carrot::class,
+		Block::POTATO_BLOCK => Potato::class,
+		Block::LEAVES2 => Leaves2::class,
 
-		//Block::BEETROOT_BLOCK => Beetroot::class,
+		Block::BEETROOT_BLOCK => Beetroot::class,
 	];
 
 	/** @var LevelTimings */
@@ -901,106 +901,58 @@ class Level implements ChunkManager, Metadatable{
 	 * @param bool     $optimizeRebuilds
 	 */
 	public function sendBlocks(array $target, array $blocks, $flags = UpdateBlockPacket::FLAG_NONE, bool $optimizeRebuilds = false){
-        foreach ($target as $player) {
-            if($player->getProtocol() == 84){
-                if($optimizeRebuilds){
-                    $chunks = [];
-                    foreach($blocks as $b){
-                        if($b === null){
-                            continue;
-                        }
+		if($optimizeRebuilds){
+			$chunks = [];
+			foreach($blocks as $b){
+				if($b === null){
+					continue;
+				}
 
-                        $pk = new UpdateBlockPacket();
-                        $first = false;
-                        if(!isset($chunks[$index = Level::chunkHash($b->x >> 4, $b->z >> 4)])){
-                            $chunks[$index] = true;
-                            $first = true;
-                        }
+				$pk = new UpdateBlockPacket();
+				$first = false;
+				if(!isset($chunks[$index = Level::chunkHash($b->x >> 4, $b->z >> 4)])){
+					$chunks[$index] = true;
+					$first = true;
+				}
 
-                        $pk->x = $b->x;
-                        $pk->z = $b->z;
-                        $pk->y = $b->y;
+				$pk->x = $b->x;
+				$pk->z = $b->z;
+				$pk->y = $b->y;
 
-                        if($b instanceof Block){
-                            $pk->blockId = $b->getId();
-                            $pk->blockData = $b->getDamage();
-                        }else{
-                            $fullBlock = $this->getFullBlock($b->x, $b->y, $b->z);
-                            $pk->blockId = $fullBlock >> 4;
-                            $pk->blockData = $fullBlock & 0xf;
-                        }
-                        $pk->flags = $first ? $flags : UpdateBlockPacket::FLAG_NONE;
-                        $player->dataPacket($pk);
-                        //Server::broadcastPacket($target, $pk);
-                    }
-                }else{
-                    foreach($blocks as $b){
-                        if($b === null){
-                            continue;
-                        }
-                        $pk = new UpdateBlockPacket();
+				if($b instanceof Block){
+					$pk->blockId = $b->getId();
+					$pk->blockData = $b->getDamage();
+				}else{
+					$fullBlock = $this->getFullBlock($b->x, $b->y, $b->z);
+					$pk->blockId = $fullBlock >> 4;
+					$pk->blockData = $fullBlock & 0xf;
+				}
+				$pk->flags = $first ? $flags : UpdateBlockPacket::FLAG_NONE;
+				Server::broadcastPacket($target, $pk);
+			}
+		}else{
+			foreach($blocks as $b){
+				if($b === null){
+					continue;
+				}
+				$pk = new UpdateBlockPacket();
 
-                        $pk->x = $b->x;
-                        $pk->z = $b->z;
-                        $pk->y = $b->y;
+				$pk->x = $b->x;
+				$pk->z = $b->z;
+				$pk->y = $b->y;
 
-                        if($b instanceof Block){
-                            $pk->blockId = $b->getId();
-                            $pk->blockData = $b->getDamage();
-                        }else{
-                            $fullBlock = $this->getFullBlock($b->x, $b->y, $b->z);
-                            $pk->blockId = $fullBlock >> 4;
-                            $pk->blockData = $fullBlock & 0xf;
-                        }
-                        $pk->flags = $flags;
-                        $player->dataPacket($pk);
-                        //Server::broadcastPacket($target, $pk);
-                    }
-                }
-            } else {
-                $pk = new \pocketmine\network\protocol\p70\UpdateBlockPacket();
-
-                if($optimizeRebuilds){
-                    $chunks = [];
-                    foreach($blocks as $b){
-                        if($b === \null){
-                            continue;
-                        }
-
-                        $first = \false;
-                        if(!isset($chunks[$index = (PHP_INT_SIZE === 8 ? ((($b->x >> 4) & 0xFFFFFFFF) << 32) | (( $b->z >> 4) & 0xFFFFFFFF) : ($b->x >> 4) . ":" . ( $b->z >> 4))])){
-                            $chunks[$index] = \true;
-                            $first = \true;
-                        }
-
-                        if($b instanceof Block){
-                            $pk->records[] = [$b->x, $b->z, $b->y, $b->getId(), $b->getDamage(), $first ? $flags : UpdateBlockPacket::FLAG_NONE];
-                        }else{
-                            $fullBlock = $this->getFullBlock($b->x, $b->y, $b->z);
-                            $pk->records[] = [$b->x, $b->z, $b->y, $fullBlock >> 4, $fullBlock & 0xf, $first ? $flags : UpdateBlockPacket::FLAG_NONE];
-                        }
-                    }
-                }else{
-                    foreach($blocks as $b){
-                        if($b === \null){
-                            continue;
-                        }
-                        if($b instanceof Block){
-                            $pk->records[] = [$b->x, $b->z, $b->y, $b->getId(), $b->getDamage(), $flags];
-                        }else{
-                            $fullBlock = $this->getFullBlock($b->x, $b->y, $b->z);
-                            $pk->records[] = [$b->x, $b->z, $b->y, $fullBlock >> 4, $fullBlock & 0xf, $flags];
-                        }
-                    }
-                }
-
-                $player->dataPacket($pk);
-
-
-            }
-	    }
-
-
+				if($b instanceof Block){
+					$pk->blockId = $b->getId();
+					$pk->blockData = $b->getDamage();
+				}else{
+					$fullBlock = $this->getFullBlock($b->x, $b->y, $b->z);
+					$pk->blockId = $fullBlock >> 4;
+					$pk->blockData = $fullBlock & 0xf;
+				}
+				$pk->flags = $flags;
+				Server::broadcastPacket($target, $pk);
+			}
+		}
 	}
 
 	public function clearCache(bool $full = false){
@@ -1151,7 +1103,7 @@ class Level implements ChunkManager, Metadatable{
 
 	public function saveChunks(){
 		foreach($this->chunks as $chunk){
-			if($chunk->hasChanged()){
+			if($chunk->hasChanged() and $chunk->isGenerated()){
 				$this->provider->setChunk($chunk->getX(), $chunk->getZ(), $chunk);
 				$this->provider->saveChunk($chunk->getX(), $chunk->getZ());
 				$chunk->setChanged(false);
@@ -1257,7 +1209,6 @@ class Level implements ChunkManager, Metadatable{
 	 * @return bool
 	 */
 	public function isFullBlock(Vector3 $pos) : bool{
-
 		if($pos instanceof Block){
 			if($pos->isSolid()){
 				return true;
@@ -1914,11 +1865,6 @@ class Level implements ChunkManager, Metadatable{
 			if($player !== null){
 				if(($diff = $player->getNextPosition()->subtract($player->getPosition())) and $diff->lengthSquared() > 0.00001){
 					$bb = $player->getBoundingBox()->getOffsetBoundingBox($diff->x, $diff->y, $diff->z);
-
-					$hand->getBoundingBox()->minX -= 2;
-					$hand->getBoundingBox()->minY -= 2;
-					$hand->getBoundingBox()->minZ -= 2;
-
 					if($hand->getBoundingBox()->intersectsWith($bb)){
 						++$realCount;
 					}
@@ -2661,7 +2607,6 @@ class Level implements ChunkManager, Metadatable{
 	}
 
 	private function sendChunkFromCache($x, $z){
-
 		if(isset($this->chunkSendTasks[$index = Level::chunkHash($x, $z)])){
 			foreach($this->chunkSendQueue[$index] as $player){
 				/** @var Player $player */
@@ -2703,14 +2648,14 @@ class Level implements ChunkManager, Metadatable{
 	}
 
 	public function chunkRequestCallback($x, $z, $payload, $ordering = FullChunkDataPacket::ORDER_COLUMNS){
+		$this->timings->syncChunkSendTimer->startTiming();
 
 		$index = Level::chunkHash($x, $z);
 
 		if(!isset($this->chunkCache[$index]) and $this->cacheChunks and $this->server->getMemoryManager()->canUseChunkCache()){
-
 			$this->chunkCache[$index] = Player::getChunkCacheFromData($x, $z, $payload, $ordering);
 			$this->sendChunkFromCache($x, $z);
-
+			$this->timings->syncChunkSendTimer->stopTiming();
 			return;
 		}
 
@@ -2718,14 +2663,13 @@ class Level implements ChunkManager, Metadatable{
 			foreach($this->chunkSendQueue[$index] as $player){
 				/** @var Player $player */
 				if($player->isConnected() and isset($player->usedChunks[$index])){
-
 					$player->sendChunk($x, $z, $payload, $ordering);
 				}
 			}
 			unset($this->chunkSendQueue[$index]);
 			unset($this->chunkSendTasks[$index]);
 		}
-
+		$this->timings->syncChunkSendTimer->stopTiming();
 	}
 
 	/**
@@ -2913,7 +2857,7 @@ class Level implements ChunkManager, Metadatable{
 
 		try{
 			if($chunk !== null){
-				if($trySave and $this->getAutoSave()){
+				if($trySave and $this->getAutoSave() and $chunk->isGenerated()){
 					$entities = 0;
 					foreach($chunk->getEntities() as $e){
 						if($e instanceof Player){

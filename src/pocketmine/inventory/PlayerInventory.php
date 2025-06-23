@@ -228,30 +228,20 @@ class PlayerInventory extends BaseInventory{
 		$pk->slot = $this->getHeldItemSlot();
 		$pk->selectedSlot = $this->getHeldItemIndex();
 
-		//TODO: VER SE DA PROBLEMAS
-
 		if(!is_array($target)){
-			//$target->dataPacket($pk);
+			$target->dataPacket($pk);
 			if($target === $this->getHolder()){
 				$this->sendSlot($this->getHeldItemSlot(), $target);
 			}
 		}else{
-            foreach (Server::getInstance()->getOnlinePlayers() as $player) {
-                if($player !== $this->getHolder()){
-                    $this->sendSlot($this->getHeldItemSlot(), $player);
-                    $player->dataPacket($pk);
-                }
-            }
-            /*
 			Server::broadcastPacket($target, $pk);
 			foreach($target as $player){
 				if($player === $this->getHolder()){
 					$this->sendSlot($this->getHeldItemSlot(), $player);
 					break;
 				}
-			}*/
+			}
 		}
-
 	}
 
 	public function onSlotChange($index, $before, $send){
@@ -285,6 +275,14 @@ class PlayerInventory extends BaseInventory{
 
 	public function setArmorItem($index, Item $item){
 		return $this->setItem($this->getSize() + $index, $item);
+	}
+	
+	public function damageArmor($index, $cost){
+		$this->slots[$this->getSize() + $index]->useOn($this->slots[$this->getSize() + $index], $cost);
+		if($this->slots[$this->getSize() + $index]->getDamage() >= $this->slots[$this->getSize() + $index]->getMaxDurability()){
+			$this->setItem($this->getSize() + $index, Item::get(Item::AIR, 0, 0));
+		}
+		$this->sendArmorContents($this->getViewers());
 	}
 
 	public function getHelmet(){

@@ -237,7 +237,11 @@ class McRegion extends BaseLevelProvider{
 
 	public function saveChunk($x, $z){
 		if($this->isChunkLoaded($x, $z)){
-			$this->getRegion($x >> 5, $z >> 5)->writeChunk($this->getChunk($x, $z));
+			$chunk = $this->getChunk($x, $z);
+			if(!$chunk->isGenerated()){
+				throw new \InvalidStateException("Cannot save un-generated chunk");
+			}
+			$this->getRegion($x >> 5, $z >> 5)->writeChunk($chunk);
 
 			return true;
 		}

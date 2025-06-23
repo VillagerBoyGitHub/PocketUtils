@@ -28,7 +28,7 @@ use pocketmine\math\Vector3;
 use pocketmine\utils\Random;
 use pocketmine\level\format\FullChunk;
 
-class Void extends Generator{
+class TheVoid extends Generator{ // I renamed it to TheVoid because Void is reserved.
 	/** @var ChunkManager */
 	private $level;
 	/** @var FullChunk */
