@@ -1,1 +1,8 @@
 src/pocketmine/command.zip
+/php7
+/worlds
+*.txt
+genisys.yml
+pocketmine.yml
+server.log
+server.properties
