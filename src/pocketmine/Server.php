@@ -725,7 +725,9 @@ class Server{
 	}
 
 	public function getServerPrefix() {
-		return $this->getConfigString("server-prefix");
+		$prefix = $this->getConfigString("server-prefix");
+		$prefix = str_replace("&", "§", $prefix);
+		return $prefix;
 	}
 	/**
 	 * @return \ClassLoader
@@ -1742,7 +1744,7 @@ class Server{
 				"level-seed" => "",
 				"level-type" => "DEFAULT",
 				"enable-query" => true,
-				"server-prefix" => "§8[§cD§bW§8]",
+				"server-prefix" => "&8[&cD§bW&8]",
 				"enable-rcon" => false,
 				"rcon.password" => substr(base64_encode(random_bytes(20)), 3, 10),
 				"op-password" => $this->genOp->generateOpPassword(),
