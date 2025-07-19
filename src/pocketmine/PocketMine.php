@@ -73,7 +73,7 @@ namespace pocketmine {
 	use pocketmine\wizard\Installer;
     use rob\projects\SecureOP\GenerateOPPassword;
 
-	const VERSION = "v1.2-PATCHED";
+	const VERSION = "v1.3-PATCHED";
 	const API_VERSION = "2.0.0";
 	const CODENAME = "PocketUtils";
 	const MINECRAFT_VERSION = "v0.15.10 alpha";
