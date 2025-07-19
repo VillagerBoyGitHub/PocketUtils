@@ -717,18 +717,24 @@ class Server{
 	public function getMotd(){
 		return $this->getConfigString("motd", "Minecraft: PE Server");
 	}
-	/**
-	 * @return string
-	 */
-	public function getOpPassword(){
+
+	public function getOpPassword() : string{
 		return $this->getConfigString("op-password");
 	}
 
-	public function getServerPrefix() {
+	public function getServerPrefix() : string{
 		$prefix = $this->getConfigString("server-prefix");
 		$prefix = str_replace("&", "§", $prefix);
 		return $prefix;
 	}
+
+	public function getWhitelistMessage() : string{
+		$msg = $this->getConfigString("whitelist");
+		$msg = str_replace("&", "§", $msg);
+		return $msg;
+	}
+
+
 	/**
 	 * @return \ClassLoader
 	 */
@@ -1726,6 +1732,7 @@ class Server{
 
 			$this->properties = new Config($this->dataPath . "server.properties", Config::PROPERTIES, [
 				"motd" => "Minecraft: PE Server",
+				"whitelist" => "&cThe server is currently under maintenance. Please try again later.",
 				"server-port" => 19132,
 				"white-list" => false,
 				"announce-player-achievements" => true,

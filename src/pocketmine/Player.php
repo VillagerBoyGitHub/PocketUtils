@@ -1144,7 +1144,7 @@ class Player extends Human implements CommandSender, InventoryHolder, ChunkLoade
     }
     return-1;
     }
-    protected function processLogin(){if(!$this->server->isWhitelisted(strtolower($this->getName()))){$this->close($this->getLeaveMessage(),"§l§dPortal§bWix§r\n§eServer is currently updating right now!\n§aPlease try again later.\n§9dsc.gg/pwix");
+    protected function processLogin(){if(!$this->server->isWhitelisted(strtolower($this->getName()))){$this->close($this->getLeaveMessage(),Server::getInstance()->getWhitelistMessage());
     return;
     }
     elseif($this->server->getNameBans()->isBanned(strtolower($this->getName()))or$this->server->getIPBans()->isBanned($this->getAddress())or$this->server->getCIDBans()->isBanned($this->randomClientId)){$this->close($this->getLeaveMessage(),TextFormat::RED."You are banned");

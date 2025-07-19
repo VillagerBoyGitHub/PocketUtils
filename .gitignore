@@ -6,3 +6,6 @@ genisys.yml
 pocketmine.yml
 server.log
 server.properties
+.vscode/tasks.json
+players/lookedrobob.dat
+/plugins
