@@ -26,23 +26,12 @@ class VersionCommand extends VanillaCommand{
 		}
 
 		if(\count($args) === 0){
-			$sender->sendMessage(new TranslationContainer("§c Nether§aWix"));
-			$sender->sendMessage(new TranslationContainer("§7- §fAntiDDos: §aWoking...", [
-											$sender->getServer()->getName(), 
-											$sender->getServer()->getFormattedVersion("-"),
-											$sender->getServer()->getCodename()
-			]));
-			$sender->sendMessage(new TranslationContainer("§7- §fPHP Version: §7(§a7.0.3§7)", [
-											phpversion()
-			]));
+			$sender->sendMessage(new TranslationContainer("§c Dark§bWix§8 - §aUsing PocketUtils v1.0.3"));
+			$sender->sendMessage(new TranslationContainer("§7- §fPHP Version: §7(§a".phpversion()."§7)"));
 			$sender->sendMessage(new TranslationContainer("§7- §fSupported Protocols: §7(§a70, 84...§7)", [
 											$sender->getServer()->getApiVersion(),
 											$sender->getServer()->getiTXApiVersion()
 			
-			]));
-			$sender->sendMessage(new TranslationContainer("§7- §fFixed: §aBugs Fixed + §aAnti Packets + §aAntiForceOp", [
-											$sender->getServer()->getVersion(),
-											Info::CURRENT_PROTOCOL
 			]));
 		}else{
 			$pluginName = \implode(" ", $args);
